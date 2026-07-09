@@ -209,10 +209,90 @@ body {
   gap: 1.5rem;
 }
 
+.results-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
 .results-count {
   font-size: 0.875rem;
   color: var(--text-muted);
   font-weight: 500;
+}
+
+.distance-sort-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  border-radius: 99px;
+  border: 1px solid var(--border-color);
+  background: var(--surface-color);
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.distance-sort-btn:hover:not(:disabled) {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+  background: rgba(79, 70, 229, 0.04);
+}
+
+.distance-sort-btn.active {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  color: white;
+}
+
+.distance-sort-btn.active:hover:not(:disabled) {
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+  color: white;
+}
+
+.distance-sort-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.distance-sort-btn .close-icon {
+  margin-left: 0.125rem;
+  opacity: 0.7;
+}
+
+.distance-sort-btn .spin-icon {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.location-error {
+  background: rgba(239, 68, 68, 0.08);
+  color: #DC2626;
+  font-size: 0.8125rem;
+  padding: 0.625rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(239, 68, 68, 0.15);
+  font-weight: 500;
+}
+
+.distance-tag {
+  background: rgba(16, 185, 129, 0.1);
+  color: #059669;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
 }
 
 .service-list {

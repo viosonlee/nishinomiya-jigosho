@@ -1,8 +1,9 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { MapPin, ChevronRight } from 'lucide-react';
+import { MapPin, ChevronRight, Navigation } from 'lucide-react';
+import { formatDistance } from '../utils/geocoding';
 
-function ServiceList({ services, onServiceClick }) {
+function ServiceList({ services, onServiceClick, showDistance }) {
   const { t } = useTranslation();
 
   const handleMapClick = (e, service) => {
@@ -24,8 +25,9 @@ function ServiceList({ services, onServiceClick }) {
     <div className="service-list">
       {services.map((service, index) => {
         const address = `${service["住所（町名）"] || ""}${service["住所（町名以下）"] || ""}`;
+        const distance = service._distance;
         return (
-          <div key={index} className="service-card" onClick={() => onServiceClick(service)}>
+          <div key={service._originalIndex ?? index} className="service-card" onClick={() => onServiceClick(service)}>
             <div className="service-card-content">
               <h3 className="service-title">{service["事業所名"]}</h3>
               <div className="service-address" onClick={(e) => handleMapClick(e, service)}>
@@ -34,6 +36,12 @@ function ServiceList({ services, onServiceClick }) {
               </div>
               <div className="service-tags">
                 <span className="tag type-tag">{t(service["種別"] || "")}</span>
+                {showDistance && distance != null && (
+                  <span className="tag distance-tag">
+                    <Navigation size={12} />
+                    {formatDistance(distance)}
+                  </span>
+                )}
               </div>
             </div>
             <div className="service-card-action">
