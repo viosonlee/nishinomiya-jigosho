@@ -1,9 +1,9 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { MapPin, ChevronRight, Navigation } from 'lucide-react';
+import { MapPin, ChevronRight, Navigation, Heart } from 'lucide-react';
 import { formatDistance } from '../utils/geocoding';
 
-function ServiceList({ services, onServiceClick, showDistance }) {
+function ServiceList({ services, onServiceClick, showDistance, isFavorite, onToggleFavorite }) {
   const { t } = useTranslation();
 
   const handleMapClick = (e, service) => {
@@ -11,6 +11,11 @@ function ServiceList({ services, onServiceClick, showDistance }) {
     const address = `${service["住所（町名）"] || ""}${service["住所（町名以下）"] || ""}`;
     const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
     window.open(url, '_blank');
+  };
+
+  const handleFavoriteClick = (e, serviceName) => {
+    e.stopPropagation();
+    onToggleFavorite(serviceName);
   };
 
   if (services.length === 0) {
@@ -26,10 +31,21 @@ function ServiceList({ services, onServiceClick, showDistance }) {
       {services.map((service, index) => {
         const address = `${service["住所（町名）"] || ""}${service["住所（町名以下）"] || ""}`;
         const distance = service._distance;
+        const serviceName = service["事業所名"];
+        const favorited = isFavorite(serviceName);
         return (
           <div key={service._originalIndex ?? index} className="service-card" onClick={() => onServiceClick(service)}>
             <div className="service-card-content">
-              <h3 className="service-title">{service["事業所名"]}</h3>
+              <div className="service-title-row">
+                <h3 className="service-title">{serviceName}</h3>
+                <button
+                  className={`favorite-btn ${favorited ? 'favorited' : ''}`}
+                  onClick={(e) => handleFavoriteClick(e, serviceName)}
+                  aria-label={favorited ? 'Remove from favorites' : 'Add to favorites'}
+                >
+                  <Heart size={18} className={favorited ? 'heart-filled' : ''} />
+                </button>
+              </div>
               <div className="service-address" onClick={(e) => handleMapClick(e, service)}>
                 <MapPin size={16} className="map-icon" />
                 <span>{address}</span>

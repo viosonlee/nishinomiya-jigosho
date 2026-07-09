@@ -1,11 +1,14 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { X, MapPin, Phone, Mail, Globe } from 'lucide-react';
+import { X, MapPin, Phone, Mail, Globe, Heart } from 'lucide-react';
 
-function ServiceDetailModal({ service, onClose }) {
-  const { t } = useTranslation();
+function ServiceDetailModal({ service, onClose, isFavorite, onToggleFavorite }) {
+  const { t, i18n } = useTranslation();
 
   if (!service) return null;
+
+  const serviceName = service["事業所名"];
+  const favorited = isFavorite(serviceName);
 
   const handleMapClick = () => {
     const address = `${service["住所（町名）"] || ""}${service["住所（町名以下）"] || ""}`;
@@ -39,12 +42,24 @@ function ServiceDetailModal({ service, onClose }) {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={e => e.stopPropagation()}>
-        <button className="modal-close" onClick={onClose}>
-          <X size={24} />
-        </button>
+        <div className="modal-top-actions">
+          <button
+            className={`modal-favorite-btn ${favorited ? 'favorited' : ''}`}
+            onClick={() => onToggleFavorite(serviceName)}
+            title={favorited
+              ? (i18n.language === 'ja' ? 'お気に入りから削除' : '取消收藏')
+              : (i18n.language === 'ja' ? 'お気に入りに追加' : '添加收藏')
+            }
+          >
+            <Heart size={20} className={favorited ? 'heart-filled' : ''} />
+          </button>
+          <button className="modal-close" onClick={onClose}>
+            <X size={24} />
+          </button>
+        </div>
         
         <div className="modal-header">
-          <h2>{service["事業所名"]}</h2>
+          <h2>{serviceName}</h2>
           <span className="tag type-tag">{t(service["種別"] || "")}</span>
         </div>
 

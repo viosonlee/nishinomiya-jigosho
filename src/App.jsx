@@ -4,8 +4,9 @@ import FilterBar from './components/FilterBar';
 import ServiceList from './components/ServiceList';
 import ServiceDetailModal from './components/ServiceDetailModal';
 import servicesData from './data/services.json';
-import { Globe, Navigation, Loader, X } from 'lucide-react';
+import { Globe, Navigation, Loader, X, Heart } from 'lucide-react';
 import { useGeolocation } from './hooks/useGeolocation';
+import { useFavorites } from './hooks/useFavorites';
 import { calculateDistance, formatDistance } from './utils/geocoding';
 
 // Flatten the data
@@ -128,8 +129,10 @@ function App() {
   
   const [selectedService, setSelectedService] = useState(null);
   const [sortByDistance, setSortByDistance] = useState(false);
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   
   const { userLocation, locationError, isLocating, requestLocation, clearLocation } = useGeolocation();
+  const { favorites, toggleFavorite, isFavorite, favoritesCount } = useFavorites();
 
   const toggleLanguage = () => {
     const newLang = i18n.language === 'ja' ? 'zh' : 'ja';
@@ -138,11 +141,9 @@ function App() {
 
   const handleDistanceSort = useCallback(() => {
     if (sortByDistance) {
-      // Turn off distance sorting
       setSortByDistance(false);
       clearLocation();
     } else {
-      // Request location and enable sorting
       requestLocation();
       setSortByDistance(true);
     }
@@ -174,7 +175,12 @@ function App() {
   }, [userLocation]);
 
   const filteredServices = useMemo(() => {
-    let result = allServices.filter((service, index) => {
+    let result = allServices.filter((service) => {
+      // Filter by favorites
+      if (showFavoritesOnly && !isFavorite(service["事業所名"])) {
+        return false;
+      }
+
       // Filter by Type
       if (filters.type && service["種別"] !== filters.type) {
         return false;
@@ -212,7 +218,7 @@ function App() {
     }
     
     return result;
-  }, [filters, sortByDistance, userLocation, serviceDistances]);
+  }, [filters, sortByDistance, userLocation, serviceDistances, showFavoritesOnly, isFavorite]);
 
   const locationErrorMessage = useMemo(() => {
     if (!locationError) return null;
@@ -232,10 +238,22 @@ function App() {
       <header className="app-header">
         <div className="header-content">
           <h1>{t('title')}</h1>
-          <button className="lang-toggle" onClick={toggleLanguage}>
-            <Globe size={18} />
-            <span>{i18n.language === 'ja' ? '中文' : '日本語'}</span>
-          </button>
+          <div className="header-actions">
+            <button
+              className={`favorites-header-btn ${showFavoritesOnly ? 'active' : ''}`}
+              onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+              title={i18n.language === 'ja' ? 'お気に入り' : '收藏'}
+            >
+              <Heart size={18} className={showFavoritesOnly ? 'heart-filled' : ''} />
+              {favoritesCount > 0 && (
+                <span className="favorites-badge">{favoritesCount}</span>
+              )}
+            </button>
+            <button className="lang-toggle" onClick={toggleLanguage}>
+              <Globe size={18} />
+              <span>{i18n.language === 'ja' ? '中文' : '日本語'}</span>
+            </button>
+          </div>
         </div>
       </header>
 
@@ -248,31 +266,40 @@ function App() {
           <section className="content">
             <div className="results-header">
               <div className="results-count">
+                {showFavoritesOnly && (
+                  <span className="favorites-label">
+                    <Heart size={14} className="heart-filled" />
+                    {i18n.language === 'ja' ? 'お気に入り' : '收藏'}
+                    {' · '}
+                  </span>
+                )}
                 {filteredServices.length} {i18n.language === 'ja' ? '件見つかりました' : '个结果'}
               </div>
-              <button
-                className={`distance-sort-btn ${sortByDistance && userLocation ? 'active' : ''}`}
-                onClick={handleDistanceSort}
-                disabled={isLocating}
-              >
-                {isLocating ? (
-                  <>
-                    <Loader size={16} className="spin-icon" />
-                    <span>{i18n.language === 'ja' ? '取得中...' : '获取中...'}</span>
-                  </>
-                ) : sortByDistance && userLocation ? (
-                  <>
-                    <Navigation size={16} />
-                    <span>{i18n.language === 'ja' ? '距離順' : '按距离排序'}</span>
-                    <X size={14} className="close-icon" />
-                  </>
-                ) : (
-                  <>
-                    <Navigation size={16} />
-                    <span>{i18n.language === 'ja' ? '現在地から近い順' : '按距当前位置排序'}</span>
-                  </>
-                )}
-              </button>
+              <div className="results-actions">
+                <button
+                  className={`distance-sort-btn ${sortByDistance && userLocation ? 'active' : ''}`}
+                  onClick={handleDistanceSort}
+                  disabled={isLocating}
+                >
+                  {isLocating ? (
+                    <>
+                      <Loader size={16} className="spin-icon" />
+                      <span>{i18n.language === 'ja' ? '取得中...' : '获取中...'}</span>
+                    </>
+                  ) : sortByDistance && userLocation ? (
+                    <>
+                      <Navigation size={16} />
+                      <span>{i18n.language === 'ja' ? '距離順' : '按距离排序'}</span>
+                      <X size={14} className="close-icon" />
+                    </>
+                  ) : (
+                    <>
+                      <Navigation size={16} />
+                      <span>{i18n.language === 'ja' ? '現在地から近い順' : '按距当前位置排序'}</span>
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
             {locationError && (
               <div className="location-error">
@@ -283,6 +310,8 @@ function App() {
               services={filteredServices}
               onServiceClick={setSelectedService}
               showDistance={sortByDistance && !!userLocation}
+              isFavorite={isFavorite}
+              onToggleFavorite={toggleFavorite}
             />
           </section>
         </div>
@@ -290,7 +319,9 @@ function App() {
 
       <ServiceDetailModal 
         service={selectedService} 
-        onClose={() => setSelectedService(null)} 
+        onClose={() => setSelectedService(null)}
+        isFavorite={isFavorite}
+        onToggleFavorite={toggleFavorite}
       />
     </div>
   );
