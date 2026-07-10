@@ -4,119 +4,14 @@ import FilterBar from './components/FilterBar';
 import ServiceList from './components/ServiceList';
 import ServiceDetailModal from './components/ServiceDetailModal';
 import servicesData from './data/services.json';
-import { Globe, Navigation, Loader, X, Heart } from 'lucide-react';
+import { getServiceCoordinates } from './data/townCoordinates';
+import { Globe, Navigation, Loader, X, Heart, Search } from 'lucide-react';
 import { useGeolocation } from './hooks/useGeolocation';
 import { useFavorites } from './hooks/useFavorites';
-import { calculateDistance, formatDistance } from './utils/geocoding';
+import { calculateDistance } from './utils/geocoding';
 
 // Flatten the data
 const allServices = Object.values(servicesData).flat();
-
-// Pre-defined area coordinates for Nishinomiya addresses
-const AREA_COORDINATES = {
-  '名塩': { lat: 34.8371, lng: 135.3208 },
-  '生瀬': { lat: 34.8319, lng: 135.3249 },
-  '塩瀬': { lat: 34.8350, lng: 135.3230 },
-  '山口': { lat: 34.8173, lng: 135.2990 },
-  '甲東園': { lat: 34.7683, lng: 135.3588 },
-  '門戸': { lat: 34.7637, lng: 135.3514 },
-  '上ヶ原': { lat: 34.7725, lng: 135.3480 },
-  '甲陽園': { lat: 34.7700, lng: 135.3394 },
-  '苦楽園': { lat: 34.7650, lng: 135.3320 },
-  '夙川': { lat: 34.7461, lng: 135.3283 },
-  '西宮北口': { lat: 34.7467, lng: 135.3597 },
-  '今津': { lat: 34.7333, lng: 135.3556 },
-  '鳴尾': { lat: 34.7260, lng: 135.3680 },
-  '甲子園': { lat: 34.7217, lng: 135.3614 },
-  '武庫川': { lat: 34.7333, lng: 135.3783 },
-  '仁川': { lat: 34.7817, lng: 135.3594 },
-  '瓦木': { lat: 34.7561, lng: 135.3700 },
-  '津門': { lat: 34.7400, lng: 135.3450 },
-  '用海': { lat: 34.7350, lng: 135.3417 },
-  '浜脇': { lat: 34.7367, lng: 135.3350 },
-  '広田': { lat: 34.7583, lng: 135.3400 },
-  '高木': { lat: 34.7500, lng: 135.3500 },
-  '大社': { lat: 34.7450, lng: 135.3300 },
-  '安井': { lat: 34.7430, lng: 135.3340 },
-  '高須': { lat: 34.7200, lng: 135.3750 },
-  '南甲子園': { lat: 34.7150, lng: 135.3600 },
-  '甲子園口': { lat: 34.7400, lng: 135.3800 },
-  '上甲子園': { lat: 34.7350, lng: 135.3700 },
-  '段上': { lat: 34.7670, lng: 135.3660 },
-  '樋ノ口': { lat: 34.7530, lng: 135.3730 },
-  '松山': { lat: 34.7400, lng: 135.3600 },
-  '田近野': { lat: 34.7520, lng: 135.3650 },
-  '荒木': { lat: 34.7460, lng: 135.3640 },
-  '小松': { lat: 34.7390, lng: 135.3580 },
-  '下大市': { lat: 34.7620, lng: 135.3570 },
-  '上大市': { lat: 34.7680, lng: 135.3550 },
-  '神呪': { lat: 34.7670, lng: 135.3520 },
-  '能登': { lat: 34.7350, lng: 135.3350 },
-  '戸田': { lat: 34.7300, lng: 135.3410 },
-  '神祇官': { lat: 34.7480, lng: 135.3350 },
-  '池田': { lat: 34.7450, lng: 135.3580 },
-  '上鳴尾': { lat: 34.7310, lng: 135.3700 },
-  '学文殿': { lat: 34.7280, lng: 135.3650 },
-  '里中': { lat: 34.7250, lng: 135.3620 },
-  '小曽根': { lat: 34.7230, lng: 135.3680 },
-  '笠屋': { lat: 34.7210, lng: 135.3750 },
-  '花園': { lat: 34.7380, lng: 135.3560 },
-  '中屋': { lat: 34.7370, lng: 135.3530 },
-  '柳本': { lat: 34.7360, lng: 135.3500 },
-  '分銅': { lat: 34.7410, lng: 135.3420 },
-  '与古道': { lat: 34.7420, lng: 135.3440 },
-  '産所': { lat: 34.7430, lng: 135.3390 },
-  '石在': { lat: 34.7440, lng: 135.3360 },
-  '城ヶ堀': { lat: 34.7410, lng: 135.3460 },
-  '馬場': { lat: 34.7390, lng: 135.3480 },
-  '六湛寺': { lat: 34.7380, lng: 135.3430 },
-  '社家': { lat: 34.7430, lng: 135.3310 },
-  '越水': { lat: 34.7380, lng: 135.3380 },
-  '中前田': { lat: 34.7340, lng: 135.3350 },
-  '田中': { lat: 34.7310, lng: 135.3380 },
-  '二見': { lat: 34.7340, lng: 135.3520 },
-  '松籟荘': { lat: 34.7630, lng: 135.3480 },
-  '神原': { lat: 34.7580, lng: 135.3430 },
-  '獅子ヶ口': { lat: 34.7590, lng: 135.3460 },
-  '若草': { lat: 34.7250, lng: 135.3590 },
-  '甲子園浦風': { lat: 34.7170, lng: 135.3600 },
-  '甲子園洲鳥': { lat: 34.7180, lng: 135.3630 },
-  '甲子園春風': { lat: 34.7190, lng: 135.3580 },
-  '甲子園砂田': { lat: 34.7200, lng: 135.3560 },
-  '甲子園六番': { lat: 34.7230, lng: 135.3610 },
-  '甲子園七番': { lat: 34.7240, lng: 135.3620 },
-  '甲子園八番': { lat: 34.7250, lng: 135.3640 },
-  '甲子園九番': { lat: 34.7260, lng: 135.3660 },
-  '西田': { lat: 34.7420, lng: 135.3530 },
-  '両度': { lat: 34.7380, lng: 135.3480 },
-  '久出ヶ谷': { lat: 34.7350, lng: 135.3420 },
-  '堀切': { lat: 34.7320, lng: 135.3400 },
-  '和上': { lat: 34.7380, lng: 135.3400 },
-  '丸橋': { lat: 34.7540, lng: 135.3670 },
-  '林田': { lat: 34.7480, lng: 135.3640 },
-  '平松': { lat: 34.7440, lng: 135.3710 },
-  '大畑': { lat: 34.7490, lng: 135.3710 },
-  '室川': { lat: 34.7510, lng: 135.3650 },
-  '松下': { lat: 34.7460, lng: 135.3730 },
-  '小松北': { lat: 34.7420, lng: 135.3590 },
-  '小松南': { lat: 34.7370, lng: 135.3570 },
-  '小松東': { lat: 34.7400, lng: 135.3610 },
-  '小松西': { lat: 34.7390, lng: 135.3550 },
-};
-
-/**
- * Find coordinates for a service address using area-based lookup.
- */
-function findServiceCoordinates(service) {
-  const townName = service['住所（町名）'] || '';
-  for (const [area, coords] of Object.entries(AREA_COORDINATES)) {
-    if (townName.includes(area)) {
-      return coords;
-    }
-  }
-  // Default to Nishinomiya city center
-  return { lat: 34.7378, lng: 135.3417 };
-}
 
 function App() {
   const { t, i18n } = useTranslation();
@@ -130,9 +25,10 @@ function App() {
   const [selectedService, setSelectedService] = useState(null);
   const [sortByDistance, setSortByDistance] = useState(false);
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   
   const { userLocation, locationError, isLocating, requestLocation, clearLocation } = useGeolocation();
-  const { favorites, toggleFavorite, isFavorite, favoritesCount } = useFavorites();
+  const { toggleFavorite, isFavorite, favoritesCount } = useFavorites();
 
   const toggleLanguage = () => {
     const newLang = i18n.language === 'ja' ? 'zh' : 'ja';
@@ -162,7 +58,7 @@ function App() {
     
     const distances = new Map();
     allServices.forEach((service, index) => {
-      const coords = findServiceCoordinates(service);
+      const coords = getServiceCoordinates(service);
       if (coords) {
         const dist = calculateDistance(
           userLocation.lat, userLocation.lng,
@@ -175,10 +71,26 @@ function App() {
   }, [userLocation]);
 
   const filteredServices = useMemo(() => {
+    // Normalize search query for matching
+    const query = searchQuery.trim().toLowerCase();
+
     let result = allServices.filter((service) => {
       // Filter by favorites
       if (showFavoritesOnly && !isFavorite(service["事業所名"])) {
         return false;
+      }
+
+      // Filter by search query (fuzzy match name + address)
+      if (query) {
+        const name = (service["事業所名"] || '').toLowerCase();
+        const town = (service["住所（町名）"] || '').toLowerCase();
+        const addr = (service["住所（町名以下）"] || '').toLowerCase();
+        const fullAddress = `${town}${addr}`;
+        // Check if all space-separated search terms match
+        const terms = query.split(/\s+/);
+        const matchTarget = `${name} ${fullAddress}`;
+        const allMatch = terms.every(term => matchTarget.includes(term));
+        if (!allMatch) return false;
       }
 
       // Filter by Type
@@ -218,7 +130,7 @@ function App() {
     }
     
     return result;
-  }, [filters, sortByDistance, userLocation, serviceDistances, showFavoritesOnly, isFavorite]);
+  }, [filters, sortByDistance, userLocation, serviceDistances, showFavoritesOnly, isFavorite, searchQuery]);
 
   const locationErrorMessage = useMemo(() => {
     if (!locationError) return null;
@@ -264,6 +176,23 @@ function App() {
           </aside>
           
           <section className="content">
+            {/* Search bar */}
+            <div className="search-bar">
+              <Search size={18} className="search-icon" />
+              <input
+                type="text"
+                className="search-input"
+                placeholder={i18n.language === 'ja' ? '名前・住所で検索...' : '搜索名称或地址...'}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              {searchQuery && (
+                <button className="search-clear" onClick={() => setSearchQuery('')}>
+                  <X size={16} />
+                </button>
+              )}
+            </div>
+
             <div className="results-header">
               <div className="results-count">
                 {showFavoritesOnly && (
