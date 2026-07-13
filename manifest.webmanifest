@@ -1,0 +1,20 @@
+{
+  "name": "西宮市障害児通所支援事業所",
+  "short_name": "西宮市通所支援",
+  "description": "西宮市の障害児通所支援事業所を検索・絞り込みできるアプリ",
+  "lang": "ja",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#F8FAFC",
+  "theme_color": "#4F46E5",
+  "icons": [
+    {
+      "src": "./favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
