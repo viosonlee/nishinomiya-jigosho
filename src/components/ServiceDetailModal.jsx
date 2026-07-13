@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { X, MapPin, Phone, Mail, Globe, Heart } from 'lucide-react';
+import { getEmailBody, getGmailUrl } from '../utils/emailTemplate';
 
 function ServiceDetailModal({ service, onClose, isFavorite, onToggleFavorite }) {
   const { t, i18n } = useTranslation();
@@ -87,12 +88,42 @@ function ServiceDetailModal({ service, onClose, isFavorite, onToggleFavorite }) 
             )}
             
             {service["メールアドレス"] && (
-              <div className="detail-row">
+              <div className="detail-row email-row-custom">
                 <span className="detail-label">{t("メールアドレス")}</span>
-                <span className="detail-value flex-icon">
-                  <Mail size={16} />
-                  {renderField("メールアドレス", service["メールアドレス"], true)}
-                </span>
+                <div className="detail-value email-content">
+                  <div className="flex-icon">
+                    <Mail size={16} />
+                    <a href={`mailto:${service["メールアドレス"]}`}>{service["メールアドレス"]}</a>
+                  </div>
+                  <div className="email-quick-actions" style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+                    <button 
+                      className="btn-copy-template"
+                      onClick={(e) => {
+                        navigator.clipboard.writeText(getEmailBody(serviceName));
+                        const btn = e.target;
+                        const originalText = btn.innerText;
+                        btn.innerText = 'コピーしました！';
+                        btn.style.backgroundColor = '#27ae60';
+                        setTimeout(() => {
+                          btn.innerText = originalText;
+                          btn.style.backgroundColor = '#f39c12';
+                        }, 2000);
+                      }}
+                      style={{ padding: '6px 12px', background: '#f39c12', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}
+                    >
+                      本文をコピー
+                    </button>
+                    <a 
+                      className="btn-send-gmail"
+                      href={getGmailUrl(service["メールアドレス"], serviceName)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ padding: '6px 12px', background: '#1a73e8', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold', textDecoration: 'none' }}
+                    >
+                      Gmailで送信
+                    </a>
+                  </div>
+                </div>
               </div>
             )}
             
