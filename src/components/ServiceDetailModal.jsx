@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { X, MapPin, Phone, Mail, Globe, Heart } from 'lucide-react';
-import { getEmailBody, getGmailUrl } from '../utils/emailTemplate';
+import { getEmailBody, getGmailUrl, getMailtoUrl } from '../utils/emailTemplate';
 
 function ServiceDetailModal({ service, onClose, isFavorite, onToggleFavorite }) {
   const { t, i18n } = useTranslation();
@@ -95,7 +95,7 @@ function ServiceDetailModal({ service, onClose, isFavorite, onToggleFavorite }) 
                     <Mail size={16} />
                     <a href={`mailto:${service["メールアドレス"]}`}>{service["メールアドレス"]}</a>
                   </div>
-                  <div className="email-quick-actions" style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+                  <div className="email-quick-actions" style={{ display: 'flex', gap: '8px', marginTop: '8px', flexWrap: 'wrap' }}>
                     <button 
                       className="btn-copy-template"
                       onClick={(e) => {
@@ -113,6 +113,13 @@ function ServiceDetailModal({ service, onClose, isFavorite, onToggleFavorite }) 
                     >
                       本文をコピー
                     </button>
+                    <a 
+                      className="btn-send-mailto"
+                      href={getMailtoUrl(service["メールアドレス"], serviceName)}
+                      style={{ padding: '6px 12px', background: '#10b981', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold', textDecoration: 'none' }}
+                    >
+                      メールアプリ
+                    </a>
                     <a 
                       className="btn-send-gmail"
                       href={getGmailUrl(service["メールアドレス"], serviceName)}

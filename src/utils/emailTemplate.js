@@ -49,3 +49,10 @@ export const getGmailUrl = (email, serviceName) => {
   const to = encodeURIComponent(email || '');
   return `https://mail.google.com/mail/?view=cm&fs=1&to=${to}&su=${subject}&body=${body}`;
 };
+
+export const getMailtoUrl = (email, serviceName) => {
+  const subject = encodeURIComponent(getEmailSubject());
+  const body = encodeURIComponent(getEmailBody(serviceName));
+  const to = encodeURIComponent(email || '');
+  return `mailto:${to}?subject=${subject}&body=${body}`;
+};
